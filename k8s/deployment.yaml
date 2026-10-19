@@ -15,7 +15,7 @@ spec:
       containers:
         - name: app
           image: weight-service:latest
-          imagePullPolicy: Never
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
 ---
