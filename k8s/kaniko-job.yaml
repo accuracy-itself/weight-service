@@ -1,0 +1,35 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kaniko-build-IMAGE_TAG_PLACEHOLDER
+  namespace: jenkins
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: kaniko
+          image: gcr.io/kaniko-project/executor:latest
+          args:
+            - "--dockerfile=Dockerfile"
+            - "--context=dir:///workspace"
+            - "--destination=REGISTRY_PLACEHOLDER/IMAGE_NAME_PLACEHOLDER:IMAGE_TAG_PLACEHOLDER"
+            - "--destination=REGISTRY_PLACEHOLDER/IMAGE_NAME_PLACEHOLDER:latest"
+            - "--insecure"
+            - "--skip-tls-verify"
+          volumeMounts:
+            - name: workspace
+              mountPath: /workspace
+            - name: kaniko-secret
+              mountPath: /kaniko/.docker
+      volumes:
+        - name: workspace
+          persistentVolumeClaim:
+            claimName: jenkins-pvc
+        - name: kaniko-secret
+          secret:
+            secretName: kaniko-registry-secret
+            items:
+              - key: .dockerconfigjson
+                path: config.json
