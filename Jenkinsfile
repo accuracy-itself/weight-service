@@ -32,51 +32,13 @@ pipeline {
         stage('Kaniko Build & Push') {
             steps {
                 sh """
-                cat <<EOF | kubectl apply -f -
-                apiVersion: batch/v1
-                kind: Job
-                metadata:
-                  name: kaniko-build-${BUILD_NUMBER}
-                  namespace: jenkins
-                spec:
-                  backoffLimit: 0
-                  template:
-                    spec:
-                      restartPolicy: Never
-                      containers:
-                      - name: kaniko
-                        image: gcr.io/kaniko-project/executor:latest
-                        args:
-                        - "--dockerfile=Dockerfile"
-                        - "--context=dir:///workspace"
-                        - "--destination=${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
-                        - "--destination=${REGISTRY}/${IMAGE_NAME}:latest"
-                        - "--insecure"
-                        - "--skip-tls-verify"
-                        volumeMounts:
-                        - name: workspace
-                          mountPath: /workspace
-                        - name: kaniko-secret
-                          mountPath: /kaniko/.docker
-                      volumes:
-                      - name: workspace
-                        persistentVolumeClaim:
-                          claimName: jenkins-pvc # Используем ваш существующий PVC, где лежит код
-                      - name: kaniko-secret
-                        secret:
-                          secretName: kaniko-registry-secret
-                          items:
-                          - key: .dockerconfigjson
-                            path: config.json
-                EOF
+                    sed -e 's|IMAGE_TAG_PLACEHOLDER|${BUILD_NUMBER}|g' \\
+                        -e 's|REGISTRY_PLACEHOLDER|${REGISTRY}|g' \\
+                        -e 's|IMAGE_NAME_PLACEHOLDER|${IMAGE_NAME}|g' \\
+                        k8s/kaniko-job.yaml > /tmp/kaniko-job-${BUILD_NUMBER}.yaml
+                    kubectl apply -f /tmp/kaniko-job-${BUILD_NUMBER}.yaml
                 """
-
                 sh "kubectl wait --for=condition=complete job/kaniko-build-${BUILD_NUMBER} -n jenkins --timeout=300s"
-            }
-            post {
-                always {
-                    sh "kubectl delete job kaniko-build-${BUILD_NUMBER} -n jenkins --ignore-not-found"
-                }
             }
         }
 
