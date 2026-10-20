@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        REGISTRY = 'registry.kube-system.svc.cluster.local:5000'
+        REGISTRY = 'registry.kube-system.svc.cluster.local'
         IMAGE_NAME = 'weight-service'
         IMAGE_TAG = "${BUILD_NUMBER}"
     }
