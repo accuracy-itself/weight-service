@@ -12,7 +12,7 @@ spec:
         - name: kaniko
           image: gcr.io/kaniko-project/executor:latest
           args:
-            - "--dockerfile=Dockerfile"
+            - "--dockerfile=/workspace/Dockerfile"
             - "--context=dir:///workspace"
             - "--destination=REGISTRY_PLACEHOLDER/IMAGE_NAME_PLACEHOLDER:IMAGE_TAG_PLACEHOLDER"
             - "--destination=REGISTRY_PLACEHOLDER/IMAGE_NAME_PLACEHOLDER:latest"
